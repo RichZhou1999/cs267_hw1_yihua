@@ -1,0 +1,87 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.14"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "hw1",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "benchmark::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-benchmark-Debug-207b70c348b037f89943.json",
+					"name" : "benchmark",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "benchmark-blas::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-benchmark-blas-Debug-7db366cd932d294b6f89.json",
+					"name" : "benchmark-blas",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "benchmark-blocked::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-benchmark-blocked-Debug-3c1d9435a60de4a948cc.json",
+					"name" : "benchmark-blocked",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "benchmark-naive::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-benchmark-naive-Debug-db85cc4f7023fb7d7640.json",
+					"name" : "benchmark-naive",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug",
+		"source" : "/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

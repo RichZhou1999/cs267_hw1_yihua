@@ -1,0 +1,6 @@
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/benchmark.dir
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/benchmark-naive.dir
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/benchmark-blocked.dir
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/benchmark-blas.dir
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/rich1999/Documents/Berkeley_Homework/cs267/HW1/hw1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
