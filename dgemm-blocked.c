@@ -36,7 +36,6 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
-            double cij = C[i + j * lda];
             for (int i = 0; i < M; ++i) {
                 double cij = C[i + j * lda];
                 cij += A[i + k * lda] * B[k*lda + j];
@@ -55,10 +54,10 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
     double B_column_list[lda*lda];
     for (int i =0; i <lda; i += 1){
         for(int j = 0; j < lda; j+=1){
-            B_column_list[i*lda + j] = *(B + (j*lda) + i)
+            B_column_list[i*lda + j] = *(B + (j*lda) + i);
         }
     }
-    double* B_column = &B_column_list;
+    double* B_column = B_column_list;
 
     for (int i = 0; i < lda; i += BLOCK_SIZE) {
         // For each block-column of B
