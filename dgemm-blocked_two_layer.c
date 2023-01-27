@@ -20,7 +20,6 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
-            double cij = C[i + j * lda];
             for (int i = 0; i < M; ++i) {
                 double cij = C[i + j * lda];
                 cij += A[i + k * lda] * B[k + j * lda];
