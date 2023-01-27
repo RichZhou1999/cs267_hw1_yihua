@@ -74,7 +74,7 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
                             int M0 = min(BLOCK_SIZE_INNER, M - i0);
                             int N0 = min(BLOCK_SIZE_INNER, N - j0);
                             int K0 = min(BLOCK_SIZE_INNER, K - k0);
-                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B + (k+k0)*lda + (j+j0), C + i+i0 + (j+j0) * lda);
+                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B_column + (k+k0)*lda + (j+j0), C + i+i0 + (j+j0) * lda);
                         }
                     }
                 }
