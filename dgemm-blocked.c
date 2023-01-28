@@ -20,9 +20,9 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
     __m256d va,vb,vc;
-    for (int k = 0; k < K; ++k) {
+    for (int k = 0; k < (K/4) *4; ++k) {
         // For each column j of B
-        for (int j = 0; j < N; ++j) {
+        for (int j = 0; j < (N/4)*4; ++j) {
             // Compute C(i,j)
             vb = _mm256_loadu_pd(&B[k*lda + j]);
             for (int i = 0; i < (M/4) * 4; i+=4) {
@@ -41,6 +41,17 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
             }
         }
     }
+    for (int k = (K / 4) * 4 ; k < K; ++k) {
+        // For each column j of B
+        for (int j = (N / 4) * 4; j < N; ++j) {
+            for (int i = 0; i < M; ++i) {
+                double cij = C[i + j * lda];
+                cij += A[i + k * lda] * B[k * lda + j];
+                C[i + j * lda] = cij;
+            }
+        }
+    }
+
 }
 
 /* This routine performs a dgemm operation
