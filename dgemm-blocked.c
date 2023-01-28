@@ -24,11 +24,11 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int j = 0; j < (N/4)*4; ++j) {
             // Compute C(i,j)
+            vb = _mm256_broadcast_pd(&B[k * lda + j]);
             for (int i = 0; i < (M/4) * 4; i+=4) {
 //                double cij = C[i + j * lda];
 //                cij += A[i + k * lda] * B[k*lda + j];
 //                C[i + j * lda] = cij;
-                vb = _mm256_loadu_pd(&B[k * lda + j]);
                 va = _mm256_loadu_pd(&A[i + k*lda]);
                 vc = _mm256_loadu_pd(&C[i + j*lda]);
                 vc = _mm256_fmadd_pd(va, vb, vc);
