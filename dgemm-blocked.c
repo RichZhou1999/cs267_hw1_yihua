@@ -1,7 +1,7 @@
 const char* dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 64
+#define BLOCK_SIZE 32
 #endif
 #ifndef BLOCK_SIZE_INNER
 #define BLOCK_SIZE_INNER 32
@@ -21,7 +21,24 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
-            for (int i = 0; i < M; ++i) {
+            for (int i = 0; i < (M/4) * 4; i+=4) {
+                double cij = C[i + j * lda];
+                cij += A[i + k * lda] * B[k*lda + j];
+                C[i + j * lda] = cij;
+
+                cij = C[i + 1 + j * lda];
+                cij += A[i+1 + k * lda] * B[k*lda + j];
+                C[i + 1 + j * lda] = cij;
+
+                cij = C[i + 2 + j * lda];
+                cij += A[i + 2 + k * lda] * B[k * lda + j];
+                C[i + 2 + j * lda] = cij;
+
+                cij = C[i + 3 + j * lda];
+                cij += A[i + 3 + k * lda] * B[k * lda + j];
+                C[i + 3 + j * lda] = cij;
+            }
+            for (int i =(M/4) * 4; i < M;++i ){
                 double cij = C[i + j * lda];
                 cij += A[i + k * lda] * B[k*lda + j];
                 C[i + j * lda] = cij;
@@ -55,19 +72,17 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
                 int M = min(BLOCK_SIZE, lda - i);
                 int N = min(BLOCK_SIZE, lda - j);
                 int K = min(BLOCK_SIZE, lda - k);
-                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
-                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
-                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
-                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
-                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
-                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
-                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B_column + (k+k0)*lda + (j+j0), C + i+i0 + (j+j0) * lda);
-                        }
-                    }
-                }
-                //do_block(lda, M, N, K, A + i + k * lda, B_column + k*lda + j , C + i + j * lda);
-
-
+//                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
+//                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
+//                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
+//                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
+//                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
+//                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
+//                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B_column + (k+k0)*lda + (j+j0), C + i+i0 + (j+j0) * lda);
+//                        }
+//                    }
+//                }
+                do_block(lda, M, N, K, A + i + k * lda, B_column + k*lda + j , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
