@@ -40,11 +40,12 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 C[i + j * lda] = cij;
             }
         }
-        for (int j = (N/4)*4; j < N; ++j){
+        for (int j = (N/4)*4; j < N; ++j) {
             for (int i = 0; i < M; ++i) {
                 double cij = C[i + j * lda];
                 cij += A[i + k * lda] * B[k * lda + j];
                 C[i + j * lda] = cij;
+            }
         }
 
     }
