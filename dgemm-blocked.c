@@ -20,9 +20,9 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
     __m256d va,vb,vc;
-    for (int k = 0; k < (K/4) *4; ++k) {
+    for (int k = 0; k < K; ++k) {
         // For each column j of B
-        for (int j = 0; j < (N/4)*4; ++j) {
+        for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
             vb = _mm256_broadcast_sd(&B[k * lda + j]);
             for (int i = 0; i < (M/4) * 4; i+=4) {
@@ -31,14 +31,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 //                C[i + j * lda] = cij;
                 va = _mm256_loadu_pd(&A[i + k*lda]);
                 vc = _mm256_loadu_pd(&C[i + j*lda]);
-                vc = _mm256_add_pd(vc,_mm256_mul_pd(va,vb));
-//                vc = _mm256_fmadd_pd(va, vb, vc);
+                vc = _mm256_fmadd_pd(va, vb, vc);
                 _mm256_storeu_pd( &C[i + j*lda], vc );
-            }
-            for (int i = 0; i < (M/4) * 4; ++i) {
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k*lda + j];
-                C[i + j * lda] = cij;
             }
             for (int i =(M/4) * 4; i < M;++i ){
                 double cij = C[i + j * lda];
@@ -46,25 +40,25 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 C[i + j * lda] = cij;
             }
         }
-        for (int j = (N/4)*4; j < N; ++j) {
-            for (int i = 0; i < M; ++i) {
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k * lda + j];
-                C[i + j * lda] = cij;
-            }
-        }
+//        for (int j = (N/4)*4; j < N; ++j) {
+//            for (int i = 0; i < M; ++i) {
+//                double cij = C[i + j * lda];
+//                cij += A[i + k * lda] * B[k * lda + j];
+//                C[i + j * lda] = cij;
+//            }
+//        }
 
     }
-    for (int k = (K / 4) * 4 ; k < K; ++k) {
-        // For each column j of B
-        for (int j = 0 ; j < N; ++j) {
-            for (int i = 0; i < M; ++i) {
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k * lda + j];
-                C[i + j * lda] = cij;
-            }
-        }
-    }
+//    for (int k = (K / 4) * 4 ; k < K; ++k) {
+//        // For each column j of B
+//        for (int j = 0 ; j < N; ++j) {
+//            for (int i = 0; i < M; ++i) {
+//                double cij = C[i + j * lda];
+//                cij += A[i + k * lda] * B[k * lda + j];
+//                C[i + j * lda] = cij;
+//            }
+//        }
+//    }
 
 }
 
