@@ -1,3 +1,5 @@
+#include "x86intrin.h"
+
 const char* dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
@@ -17,26 +19,20 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
+    __m256d va,vb,vc;
     for (int k = 0; k < K; ++k) {
         // For each column j of B
         for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
+            vb = _mm256_loadu_pd(&B[k*lda + j]);
             for (int i = 0; i < (M/4) * 4; i+=4) {
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k*lda + j];
-                C[i + j * lda] = cij;
-
-                cij = C[i + 1 + j * lda];
-                cij += A[i+1 + k * lda] * B[k*lda + j];
-                C[i + 1 + j * lda] = cij;
-
-                cij = C[i + 2 + j * lda];
-                cij += A[i + 2 + k * lda] * B[k * lda + j];
-                C[i + 2 + j * lda] = cij;
-
-                cij = C[i + 3 + j * lda];
-                cij += A[i + 3 + k * lda] * B[k * lda + j];
-                C[i + 3 + j * lda] = cij;
+//                double cij = C[i + j * lda];
+//                cij += A[i + k * lda] * B[k*lda + j];
+//                C[i + j * lda] = cij;
+                va = _mm256_loadu_pd(&A[i + k*lda]);
+                vc = _mm256_loadu_pd(&C[i + j*lda]);
+                vc = _mm256_fmadd_pd(vc, va, vb);
+                _mm256_storeu_pd( &C[i + j*lda], vc );
             }
             for (int i =(M/4) * 4; i < M;++i ){
                 double cij = C[i + j * lda];
