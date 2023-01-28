@@ -23,22 +23,27 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
     for (int k = 0; k < (K/4) *4; ++k) {
         // For each column j of B
         for (int j = 0; j < (N/4)*4; ++j) {
+            for (int i = 0; i < M; ++i) {
+                double cij = C[i + j * lda];
+                cij += A[i + k * lda] * B[k * lda + j];
+                C[i + j * lda] = cij;
+            }
             // Compute C(i,j)
-            vb = _mm256_loadu_pd(&B[k*lda + j]);
-            for (int i = 0; i < (M/4) * 4; i+=4) {
+//            vb = _mm256_loadu_pd(&B[k*lda + j]);
+//            for (int i = 0; i < (M/4) * 4; i+=4) {
+////                double cij = C[i + j * lda];
+////                cij += A[i + k * lda] * B[k*lda + j];
+////                C[i + j * lda] = cij;
+//                va = _mm256_loadu_pd(&A[i + k*lda]);
+//                vc = _mm256_loadu_pd(&C[i + j*lda]);
+//                vc = _mm256_fmadd_pd(vc, va, vb);
+//                _mm256_storeu_pd( &C[i + j*lda], vc );
+//            }
+//            for (int i =(M/4) * 4; i < M;++i ){
 //                double cij = C[i + j * lda];
 //                cij += A[i + k * lda] * B[k*lda + j];
 //                C[i + j * lda] = cij;
-                va = _mm256_loadu_pd(&A[i + k*lda]);
-                vc = _mm256_loadu_pd(&C[i + j*lda]);
-                vc = _mm256_fmadd_pd(vc, va, vb);
-                _mm256_storeu_pd( &C[i + j*lda], vc );
-            }
-            for (int i =(M/4) * 4; i < M;++i ){
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k*lda + j];
-                C[i + j * lda] = cij;
-            }
+//            }
         }
         for (int j = (N/4)*4; j < N; ++j) {
             for (int i = 0; i < M; ++i) {
