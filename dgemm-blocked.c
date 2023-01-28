@@ -31,7 +31,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 //                C[i + j * lda] = cij;
                 va = _mm256_loadu_pd(&A[i + k*lda]);
                 vc = _mm256_loadu_pd(&C[i + j*lda]);
-                vc = _mm256_fmadd_pd(va, vb, vc);
+                vc = _mm256_add_pd(vc,_mm256_mul_pd(va,vb));
+//                vc = _mm256_fmadd_pd(va, vb, vc);
                 _mm256_storeu_pd( &C[i + j*lda], vc );
             }
             for (int i = 0; i < (M/4) * 4; ++i) {
