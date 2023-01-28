@@ -28,11 +28,11 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 //                double cij = C[i + j * lda];
 //                cij += A[i + k * lda] * B[k*lda + j];
 //                C[i + j * lda] = cij;
-                vb = _mm256_load_pd(&B[k * lda + j]);
-                va = _mm256_load_pd(&A[i + k*lda]);
-                vc = _mm256_load_pd(&C[i + j*lda]);
+                vb = _mm256_loadu_pd(&B[k * lda + j]);
+                va = _mm256_loadu_pd(&A[i + k*lda]);
+                vc = _mm256_loadu_pd(&C[i + j*lda]);
                 vc = _mm256_fmadd_pd(vc, va, vb);
-                _mm256_store_pd( &C[i + j*lda], vc );
+                _mm256_storeu_pd( &C[i + j*lda], vc );
             }
             for (int i =(M/4) * 4; i < M;++i ){
                 double cij = C[i + j * lda];
