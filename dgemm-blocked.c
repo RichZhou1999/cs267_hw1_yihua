@@ -44,20 +44,31 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
-    for (int j = 0; j < N; ++j) {
+    __m256d va1,vb1,vc1;
+    for (int k = 0; k < K; ++k) {
         // For each column j of B
-        for (int i = 0; i < M; ++i) {
-            double cij = C[i + j * lda];
-            for (int k = 0; k < K;++k ){
-                cij += A[i*lda + k] * B[k + j *lda];
+        for (int j = 0; j < N; ++j) {
+            __m256d result_list[(M/4)*4];
+            for (int i = 0; i < (M/4)*4; i+=4 ){
+                va1 = _mm256_loadu_pd(&A[i + k * lda]);
+                vb1 = _mm256_broadcast_sd(&B[k + j*lda]);
+                vc1 = _mm256_loadu_pd(&C[i + j * lda]);
+                vc1 = _mm256_fmadd_pd(va1, vb1, vc1);
+                result_list[(i/4)] = vc1;
+//                _mm256_storeu_pd( &C[i + j*lda], vc1 );
             }
-            C[i + j * lda] = cij;
+            for (int i = 0; i < (M/4)*4; i+=4 ){
+                _mm256_storeu_pd( &C[i + j*lda], result_list[(i/4)] );
+            }
+            for (int i = (M/4)*4; i < M;++i ){
+                double cij = C[i + j * lda];
+                cij += A[i + k*lda] * B[k + j *lda];
+                C[i + j * lda] = cij;
+            }
         }
     }
+
 }
-
-
-
 
 
 /* This routine performs a dgemm operation
@@ -74,15 +85,15 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //        }
 //    }
 
-    double A_column_list[lda*lda];
-    for (int i =0; i <lda; i += 1){
-        for(int j = 0; j < lda; j+=1){
-            A_column_list[i*lda + j] = *(A + (j*lda) + i);
-        }
-    }
+//    double A_column_list[lda*lda];
+//    for (int i =0; i <lda; i += 1){
+//        for(int j = 0; j < lda; j+=1){
+//            A_column_list[i*lda + j] = *(A + (j*lda) + i);
+//        }
+//    }
     //use a pointer point to the head of the column-wised array B
 //    double* B_column = B_column_list;
-    double* A_column = A_column_list;
+//    double* A_column = A_column_list;
 
     for (int i = 0; i < lda; i += BLOCK_SIZE) {
         // For each block-column of B
@@ -103,7 +114,7 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //                        }
 //                    }
 //                }
-                do_block(lda, M, N, K, A_column + i*lda + k, B + k + j*lda , C + i + j * lda);
+                do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
