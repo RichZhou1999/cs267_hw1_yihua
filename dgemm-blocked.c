@@ -44,18 +44,58 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
-    __m256d va,vb,vc;
+    __m256d va1,vb1,vc1;
+    __m256d va2,vb2,vc2;
+    __m256d va3,vb3,vc3;
+    __m256d va4,vb4,vc4;
     for (int k = 0; k < K; ++k) {
         // For each column j of B
-        for (int j = 0; j < N; ++j) {
-            vb = _mm256_broadcast_sd(&B[k + j*lda]);
+        for (int j = 0; j < (N/4)*4; j+=4) {
             for (int i = 0; i < (M/4)*4; i+=4 ){
-                va = _mm256_loadu_pd(&A[i + k * lda]);
-                vc = _mm256_loadu_pd(&C[i + j * lda]);
-                vc = _mm256_fmadd_pd(va, vb, vc);
-                _mm256_storeu_pd( &C[i + j*lda], vc );
+                va1 = _mm256_loadu_pd(&A[i + k * lda]);
+                vb1 = _mm256_broadcast_sd(&B[k + j*lda]);
+                vc1 = _mm256_loadu_pd(&C[i + j * lda]);
+                vc1 = _mm256_fmadd_pd(va1, vb1, vc1);
+                _mm256_storeu_pd( &C[i + j*lda], vc1 );
+
+                va2 = _mm256_loadu_pd(&A[i + k * lda]);
+                vb2 = _mm256_broadcast_sd(&B[k + (j+1)*lda]);
+                vc2 = _mm256_loadu_pd(&C[i + (j+1) * lda]);
+                vc2 = _mm256_fmadd_pd(va2, vb2, vc2);
+                _mm256_storeu_pd( &C[i + (j+1)*lda], vc2 );
+
+                va3 = _mm256_loadu_pd(&A[i + k * lda]);
+                vb3 = _mm256_broadcast_sd(&B[k + (j+2)*lda]);
+                vc3 = _mm256_loadu_pd(&C[i + (j+2) * lda]);
+                vc3 = _mm256_fmadd_pd(va3, vb3, vc3);
+                _mm256_storeu_pd( &C[i + (j+2)*lda], vc3 );
+
+                va4 = _mm256_loadu_pd(&A[i + k * lda]);
+                vb4 = _mm256_broadcast_sd(&B[k + (j+3)*lda]);
+                vc4 = _mm256_loadu_pd(&C[i + (j+3) * lda]);
+                vc4 = _mm256_fmadd_pd(va4, vb4, vc4);
+                _mm256_storeu_pd( &C[i + (j+3)*lda], vc4 );
             }
             for (int i = (M/4)*4; i < M;++i ){
+                double cij = C[i + j * lda];
+                cij += A[i + k*lda] * B[k + j *lda];
+                C[i + j * lda] = cij;
+
+                cij = C[i + (j+1) * lda];
+                cij += A[i + k*lda] * B[k + (j+1) *lda];
+                C[i + (j+1) * lda] = cij;
+
+                cij = C[i + (j+2) * lda];
+                cij += A[i + k*lda] * B[k + (j+2) *lda];
+                C[i + (j+2) * lda] = cij;
+
+                cij = C[i + (j+3) * lda];
+                cij += A[i + k*lda] * B[k + (j+3) *lda];
+                C[i + (j+3) * lda] = cij;
+            }
+        }
+        for (int j = (N/4)*4; j < N; ++j) {
+            for (int i = 0; i < M;++i ){
                 double cij = C[i + j * lda];
                 cij += A[i + k*lda] * B[k + j *lda];
                 C[i + j * lda] = cij;
