@@ -45,12 +45,12 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
 //    __m256d va,vb,vc;
-    for (int i = 0; i < M; ++i) {
+    for (int k = 0; k < K; ++k) {
         // For each column j of B
         for (int j = 0; j < N; ++j) {
-            for (int k = 0; k < K;++k ){
+            for (int i = 0; i < M;++i ){
                 double cij = C[i + j * lda];
-                cij += A[i*lda + k] * B[k + j *lda];
+                cij += A[i + k*lda] * B[k + j *lda];
                 C[i + j * lda] = cij;
             }
         }
@@ -73,15 +73,15 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //        }
 //    }
 
-    double A_column_list[lda*lda];
-    for (int i =0; i <lda; i += 1){
-        for(int j = 0; j < lda; j+=1){
-            A_column_list[i*lda + j] = *(A + (j*lda) + i);
-        }
-    }
+//    double A_column_list[lda*lda];
+//    for (int i =0; i <lda; i += 1){
+//        for(int j = 0; j < lda; j+=1){
+//            A_column_list[i*lda + j] = *(A + (j*lda) + i);
+//        }
+//    }
     //use a pointer point to the head of the column-wised array B
 //    double* B_column = B_column_list;
-    double* A_column = A_column_list;
+//    double* A_column = A_column_list;
 
     for (int i = 0; i < lda; i += BLOCK_SIZE) {
         // For each block-column of B
@@ -102,7 +102,7 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //                        }
 //                    }
 //                }
-                do_block(lda, M, N, K, A_column + i*lda + k, B + k + j*lda , C + i + j * lda);
+                do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
