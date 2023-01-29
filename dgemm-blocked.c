@@ -45,10 +45,10 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
 //    __m256d va,vb,vc;
-    for (int k = 0; k < K; ++k) {
+    for (int j = 0; j < N; ++j) {
         // For each column j of B
-        for (int i = 0; i < M; ++i) {
-            for (int j = 0; j < N;++j ){
+        for (int k = 0; k < K; ++k) {
+            for (int i = 0; i < M;++i ){
                 double cij = C[i + j * lda];
                 cij += A[i*lda + k] * B[k + j *lda];
                 C[i + j * lda] = cij;
