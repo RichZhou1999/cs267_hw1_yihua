@@ -48,7 +48,7 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
     for (int k = 0; k < K; ++k) {
         // For each column j of B
         for (int j = 0; j < N; ++j) {
-            __m256d result_list[(M/4)*4];
+//            __m256d result_list[(M/4)*4];
             for (int i = 0; i < (M/4)*4; i+=4 ){
                 va1 = _mm256_loadu_pd(&A[i + k * lda]);
                 vb1 = _mm256_broadcast_sd(&B[k + j*lda]);
