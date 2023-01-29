@@ -24,13 +24,10 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int j = 0; j < N; ++j) {
             // Compute C(i,j)
-            vb = _mm256_broadcast_sd(&B[k * lda + j]);
+            vb = _mm256_broadcast_sd(&B[k + j*lda]);
             for (int i = 0; i < (M/4) * 4; i+=4) {
-//                double cij = C[i + j * lda];
-//                cij += A[i + k * lda] * B[k*lda + j];
-//                C[i + j * lda] = cij;
-                va = _mm256_loadu_pd(&A[i + k*lda]);
-                vc = _mm256_loadu_pd(&C[i + j*lda]);
+                va = _mm256_loadu_pd(&A[i * lda + k]);
+                vc = _mm256_loadu_pd(&C[i + j * lda]);
                 vc = _mm256_fmadd_pd(va, vb, vc);
                 _mm256_storeu_pd( &C[i + j*lda], vc );
             }
@@ -40,25 +37,7 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 C[i + j * lda] = cij;
             }
         }
-//        for (int j = (N/4)*4; j < N; ++j) {
-//            for (int i = 0; i < M; ++i) {
-//                double cij = C[i + j * lda];
-//                cij += A[i + k * lda] * B[k * lda + j];
-//                C[i + j * lda] = cij;
-//            }
-//        }
-
     }
-//    for (int k = (K / 4) * 4 ; k < K; ++k) {
-//        // For each column j of B
-//        for (int j = 0 ; j < N; ++j) {
-//            for (int i = 0; i < M; ++i) {
-//                double cij = C[i + j * lda];
-//                cij += A[i + k * lda] * B[k * lda + j];
-//                C[i + j * lda] = cij;
-//            }
-//        }
-//    }
 
 }
 
@@ -69,14 +48,22 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 void square_dgemm(int lda, double* A, double* B, double* C) {
 
     // get the column-wised B 1D array
-    double B_column_list[lda*lda];
+//    double B_column_list[lda*lda];
+//    for (int i =0; i <lda; i += 1){
+//        for(int j = 0; j < lda; j+=1){
+//            B_column_list[i*lda + j] = *(B + (j*lda) + i);
+//        }
+//    }
+
+    double A_column_list[lda*lda];
     for (int i =0; i <lda; i += 1){
         for(int j = 0; j < lda; j+=1){
-            B_column_list[i*lda + j] = *(B + (j*lda) + i);
+            A_column_list[i*lda + j] = *(A + (j*lda) + i);
         }
     }
     //use a pointer point to the head of the column-wised array B
-    double* B_column = B_column_list;
+//    double* B_column = B_column_list;
+    double* A_column = A_column_list;
 
     for (int i = 0; i < lda; i += BLOCK_SIZE) {
         // For each block-column of B
@@ -97,7 +84,7 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //                        }
 //                    }
 //                }
-                do_block(lda, M, N, K, A + i + k * lda, B_column + k*lda + j , C + i + j * lda);
+                do_block(lda, M, N, K, A_column + i*lda + k, B + k + j*lda , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
