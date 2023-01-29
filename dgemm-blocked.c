@@ -48,14 +48,16 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
         // For each column j of B
         for (int i = 0; i < M; ++i) {
             double cij = C[i + j * lda];
-            for (int k = 0; i < K;++k ){
+            for (int k = 0; k < K;++k ){
                 cij += A[i*lda + k] * B[k + j *lda];
             }
             C[i + j * lda] = cij;
         }
     }
-
 }
+
+
+
 
 
 /* This routine performs a dgemm operation
