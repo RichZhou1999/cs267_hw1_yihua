@@ -47,8 +47,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 //    __m256d va,vb,vc;
     for (int k = 0; k < K; ++k) {
         // For each column j of B
-        for (int j = 0; j < N; ++j) {
-            for (int i = 0; i < M;++i ){
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N;++j ){
                 double cij = C[i + j * lda];
                 cij += A[i*lda + k] * B[k + j *lda];
                 C[i + j * lda] = cij;
