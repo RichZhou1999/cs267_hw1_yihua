@@ -6,7 +6,7 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 #define BLOCK_SIZE 32
 #endif
 #ifndef BLOCK_SIZE_INNER
-#define BLOCK_SIZE_INNER 32
+#define BLOCK_SIZE_INNER 8
 #endif
 
 #define min(a, b) (((a) < (b)) ? (a) : (b))
@@ -104,17 +104,17 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
                 int M = min(BLOCK_SIZE, lda - i);
                 int N = min(BLOCK_SIZE, lda - j);
                 int K = min(BLOCK_SIZE, lda - k);
-//                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
-//                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
-//                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
-//                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
-//                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
-//                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
-//                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B_column + (k+k0)*lda + (j+j0), C + i+i0 + (j+j0) * lda);
-//                        }
-//                    }
-//                }
-                do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda , C + i + j * lda);
+                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
+                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
+                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
+                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
+                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
+                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
+                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B + (k+k0) + (j+j0)*lda, C + i+i0 + (j+j0) * lda);
+                        }
+                    }
+                }
+//                do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
