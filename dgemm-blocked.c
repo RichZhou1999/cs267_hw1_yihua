@@ -3,7 +3,7 @@
 const char* dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 512
+#define BLOCK_SIZE 128
 #endif
 #ifndef BLOCK_SIZE_INNER
 #define BLOCK_SIZE_INNER 256
@@ -42,27 +42,74 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 //}
 
 
+//static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
+//    // For each row i of A
+//    __m256d va1,vb1,vc1;
+//    for (int k = 0; k < K; ++k) {
+//        // For each column j of B
+//        for (int j = 0; j < N; ++j) {
+////            __m256d result_list[(M/4)*4];
+//            for (int i = 0; i < (M/4)*4; i+=4 ){
+//                va1 = _mm256_loadu_pd(&A[i + k * lda]);
+//                vb1 = _mm256_broadcast_sd(&B[k + j*lda]);
+//                vc1 = _mm256_loadu_pd(&C[i + j * lda]);
+//                vc1 = _mm256_fmadd_pd(va1, vb1, vc1);
+////                result_list[(i/4)] = vc1;
+//                _mm256_storeu_pd( &C[i + j*lda], vc1 );
+//            }
+////            for (int i = 0; i < (M/4)*4; i+=4 ){
+////                _mm256_storeu_pd( &C[i + j*lda], result_list[(i/4)] );
+////            }
+//            for (int i = (M/4)*4; i < M;++i ){
+//                double cij = C[i + j * lda];
+//                cij += A[i + k*lda] * B[k + j *lda];
+//                C[i + j * lda] = cij;
+//            }
+//        }
+//    }
+//
+//}
+
+
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
-    __m256d va1,vb1,vc1;
-    for (int k = 0; k < K; ++k) {
-        // For each column j of B
-        for (int j = 0; j < N; ++j) {
-//            __m256d result_list[(M/4)*4];
-            for (int i = 0; i < (M/4)*4; i+=4 ){
-                va1 = _mm256_loadu_pd(&A[i + k * lda]);
-                vb1 = _mm256_broadcast_sd(&B[k + j*lda]);
-                vc1 = _mm256_loadu_pd(&C[i + j * lda]);
-                vc1 = _mm256_fmadd_pd(va1, vb1, vc1);
-//                result_list[(i/4)] = vc1;
-                _mm256_storeu_pd( &C[i + j*lda], vc1 );
+    for (int i = 0; i < (M/4)*4; i += 4){
+        for (int j = 0; j < (N/4)*4; j += 4){
+            __m256d vc0 = _mm256_loadu_pd(&C[i + j * lda]);
+            __m256d vc1 = _mm256_loadu_pd(&C[i + (j+1) * lda]);
+            __m256d vc2 = _mm256_loadu_pd(&C[i + (j+2) * lda]);
+            __m256d vc3 = _mm256_loadu_pd(&C[i + (j+3) * lda]);
+            for (int k = 0; k < K; k++){
+                __m256d va = _mm256_loadu_pd(&A[i + k * lda]);
+                __m256d vb0 = _mm256_broadcast_sd(&B[k * lda + j]);
+                __m256d vb1 = _mm256_broadcast_sd(&B[k * lda + j + 1]);
+                __m256d vb2 = _mm256_broadcast_sd(&B[k * lda + j + 2]);
+                __m256d vb3 = _mm256_broadcast_sd(&B[k * lda + j + 3]);
+                vc0 = _mm256_fmadd_pd(va, vb0, vc0);
+                vc1 = _mm256_fmadd_pd(va, vb1, vc1);
+                vc2 = _mm256_fmadd_pd(va, vb2, vc2);
+                vc3 = _mm256_fmadd_pd(va, vb3, vc3);
             }
-//            for (int i = 0; i < (M/4)*4; i+=4 ){
-//                _mm256_storeu_pd( &C[i + j*lda], result_list[(i/4)] );
-//            }
-            for (int i = (M/4)*4; i < M;++i ){
+            _mm256_storeu_pd( &C[i + j * lda], vc0 );
+            _mm256_storeu_pd( &C[i + (j+1)*lda], vc1 );
+            _mm256_storeu_pd( &C[i + (j+2)*lda], vc2 );
+            _mm256_storeu_pd( &C[i + (j+3)*lda], vc3 );
+        }
+        for (int j = (N/4)*4; j < N; j ++){
+            for (int k = 0; k < K; k++){
                 double cij = C[i + j * lda];
-                cij += A[i + k*lda] * B[k + j *lda];
+                cij += A[i + k*lda] * B[k*lda + j];
+                C[i + j * lda] = cij;
+            }
+        }
+
+
+    }
+    for (int i = (M/4)*4; i < M; i ++){
+        for (int j = 0; j < N; j ++) {
+            for (int k = 0; k < K; k++) {
+                double cij = C[i + j * lda];
+                cij += A[i + k * lda] * B[k * lda + j];
                 C[i + j * lda] = cij;
             }
         }
@@ -78,12 +125,12 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 void square_dgemm(int lda, double* A, double* B, double* C) {
 
     // get the column-wised B 1D array
-//    double B_column_list[lda*lda];
-//    for (int i =0; i <lda; i += 1){
-//        for(int j = 0; j < lda; j+=1){
-//            B_column_list[i*lda + j] = *(B + (j*lda) + i);
-//        }
-//    }
+    double B_column_list[lda*lda];
+    for (int i =0; i <lda; i += 1){
+        for(int j = 0; j < lda; j+=1){
+            B_column_list[i*lda + j] = *(B + (j*lda) + i);
+        }
+    }
 
 //    double A_column_list[lda*lda];
 //    for (int i =0; i <lda; i += 1){
@@ -92,7 +139,7 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
 //        }
 //    }
     //use a pointer point to the head of the column-wised array B
-//    double* B_column = B_column_list;
+    double* B_column = B_column_list;
 //    double* A_column = A_column_list;
 
     for (int i = 0; i < lda; i += BLOCK_SIZE) {
@@ -104,17 +151,17 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
                 int M = min(BLOCK_SIZE, lda - i);
                 int N = min(BLOCK_SIZE, lda - j);
                 int K = min(BLOCK_SIZE, lda - k);
-                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
-                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
-                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
-                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
-                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
-                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
-                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B + (k+k0) + (j+j0)*lda, C + i+i0 + (j+j0) * lda);
-                        }
-                    }
-                }
-//                do_block(lda, M, N, K, A + i + k*lda, B + k + j*lda , C + i + j * lda);
+//                for (int i0 = 0; i0 < M; i0 += BLOCK_SIZE_INNER){
+//                    for (int j0 = 0; j0 < N; j0 += BLOCK_SIZE_INNER){
+//                        for (int k0 = 0; k0 < K; k0 += BLOCK_SIZE_INNER) {
+//                            int M0 = min(BLOCK_SIZE_INNER, M - i0);
+//                            int N0 = min(BLOCK_SIZE_INNER, N - j0);
+//                            int K0 = min(BLOCK_SIZE_INNER, K - k0);
+//                            do_block(lda, M0, N0, K0, A + (i+i0) + (k+k0) * lda, B + (k+k0) + (j+j0)*lda, C + i+i0 + (j+j0) * lda);
+//                        }
+//                    }
+//                }
+                do_block(lda, M, N, K, A + i + k*lda, B_column + k*lda + j , C + i + j * lda);
                 // Perform individual block dgemm
             }
         }
