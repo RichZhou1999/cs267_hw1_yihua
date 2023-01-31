@@ -3,7 +3,7 @@
 const char* dgemm_desc = "Simple blocked dgemm.";
 
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 128
+#define BLOCK_SIZE 64
 #endif
 #ifndef BLOCK_SIZE_INNER
 #define BLOCK_SIZE_INNER 256
@@ -155,88 +155,6 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
 
 }
 
-
-//static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
-//    // For each row i of A
-//    for (int i = 0; i < (M/4)*4; i += 4) {
-////        for (int j = 0; j < (N/4)*4; j+=4) {
-////            double cij0 = C[i + j * lda];
-////            double cij1 = C[i+1 + j * lda];
-////            double cij2 = C[i+2 + j * lda];
-////            double cij3 = C[i+3 + j * lda];
-////            for (int k = 0; k < K; k++) {
-////                cij0 += A[i + k * lda] * B[k * lda + j];
-////                cij1 += A[i + 1 + k * lda] * B[k * lda + j];
-////                cij2 += A[i + 2 + k * lda] * B[k * lda + j];
-////                cij3 += A[i + 3 +k * lda] * B[k * lda + j];
-////
-////                cij0 += A[i + k * lda] * B[k * lda + j + 1];
-////                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 1];
-////                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 1];
-////                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 1];
-////
-////                cij0 += A[i + k * lda] * B[k * lda + j + 2];
-////                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 2];
-////                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 2];
-////                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 2];
-////
-////                cij0 += A[i + k * lda] * B[k * lda + j + 3];
-////                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 3];
-////                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 3];
-////                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 3];
-////
-////            }
-////            C[i + j * lda] = cij0;
-////            C[i + 1 + j * lda] = cij1;
-////            C[i + 2 + j * lda] = cij2;
-////            C[i + 3 + j * lda] = cij3;
-////        }
-//        for (int j = 0; j < (N/4)*4; j+=2) {
-//            double cij0 = C[i + j * lda];
-//            double cij1 = C[i + 1 + j * lda];
-//            double cij2 = C[i + 2 + j * lda];
-//            double cij3 = C[i + 3 + j * lda];
-//            for (int k = 0; k < K; k++) {
-//                cij0 += A[i + k * lda] * B[k * lda + j];
-//                cij1 += A[i + 1 + k * lda] * B[k * lda + j];
-//                cij2 += A[i + 2 + k * lda] * B[k * lda + j];
-//                cij3 += A[i + 3 +k * lda] * B[k * lda + j];
-//            }
-//            C[i + j * lda] = cij0;
-//            C[i + 1 + j * lda] = cij1;
-//            C[i + 2 + j * lda] = cij2;
-//            C[i + 3 + j * lda] = cij3;
-//        }
-//
-//        for (int j = (N/4)*4; j < N; j++) {
-//            double cij0 = C[i + j * lda];
-//            double cij1 = C[i + 1 + j * lda];
-//            double cij2 = C[i + 2 + j * lda];
-//            double cij3 = C[i + 3 + j * lda];
-//            for (int k = 0; k < K; k++) {
-//                cij0 += A[i + k * lda] * B[k * lda + j];
-//                cij1 += A[i + 1 + k * lda] * B[k * lda + j];
-//                cij2 += A[i + 2 + k * lda] * B[k * lda + j];
-//                cij3 += A[i + 3 +k * lda] * B[k * lda + j];
-//        }
-//            C[i + j * lda] = cij0;
-//            C[i + 1 + j * lda] = cij1;
-//            C[i + 2 + j * lda] = cij2;
-//            C[i + 3 + j * lda] = cij3;
-//        }
-//    }
-//    for (int i = (M/4)*4; i < M; i++){
-//        for (int j = 0; j < N; j++) {
-//            double cij = C[i + j * lda];
-//            for (int k = 0; k < K; k++) {
-//                cij += A[i + k * lda] * B[k * lda + j];
-//            }
-//            C[i + j * lda] = cij;
-//        }
-//    }
-//}
-
-
 /* This routine performs a dgemm operation
  *  C := C + A * B
  * where A, B, and C are lda-by-lda matrices stored in column-major format.
@@ -261,11 +179,11 @@ void square_dgemm(int lda, double* A, double* B, double* C) {
     double* B_column = B_column_list;
 //    double* A_column = A_column_list;
 
-    for (int j = 0; j < lda; j += BLOCK_SIZE) {
+    for (int k = 0; k < lda; k += BLOCK_SIZE) {
         // For each block-column of B
-        for (int k = 0; k < lda; k += BLOCK_SIZE) {
+        for (int i = 0; i < lda; i += BLOCK_SIZE) {
             // Accumulate block dgemms into block of C
-            for (int i = 0; i < lda; i += BLOCK_SIZE) {
+            for (int j = 0; j < lda; j += BLOCK_SIZE) {
                 // Correct block dimensions if block "goes off edge of" the matrix
                 int M = min(BLOCK_SIZE, lda - i);
                 int N = min(BLOCK_SIZE, lda - j);
