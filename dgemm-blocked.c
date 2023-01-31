@@ -152,22 +152,31 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
             C[i + 2 + j * lda] = cij2;
             C[i + 3 + j * lda] = cij3;
         }
-        for (int j = (N/4)*4; j < N; j++) {
-            for (int k = 0; k < K; k++) {
-                double cij = C[i + j * lda];
-                cij += A[i + k * lda] * B[k * lda + j];
-                C[i + j * lda] = cij;
-        }
-        }
 
+        for (int j = (N/4)*4; j < N; j++) {
+            double cij0 = C[i + j * lda];
+            double cij1 = C[i + 1 + j * lda];
+            double cij2 = C[i + 2 + j * lda];
+            double cij3 = C[i + 3 + j * lda];
+            for (int k = 0; k < K; k++) {
+                cij0 += A[i + k * lda] * B[k * lda + j];
+                cij1 += A[i + 1 + k * lda] * B[k * lda + j];
+                cij2 += A[i + 2 + k * lda] * B[k * lda + j];
+                cij3 += A[i + 3 +k * lda] * B[k * lda + j];
+        }
+            C[i + j * lda] = cij0;
+            C[i + 1 + j * lda] = cij1;
+            C[i + 2 + j * lda] = cij2;
+            C[i + 3 + j * lda] = cij3;
+        }
     }
     for (int i = (M/4)*4; i < M; i++){
         for (int j = 0; j < N; j++) {
+            double cij = C[i + j * lda];
             for (int k = 0; k < K; k++) {
-                double cij = C[i + j * lda];
                 cij += A[i + k * lda] * B[k * lda + j];
-                C[i + j * lda] = cij;
             }
+            C[i + j * lda] = cij;
         }
     }
 
