@@ -121,7 +121,7 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
     for (int i = 0; i < (M/4)*4; i += 4) {
-        for (int j = 0; j < (N/4)*4; j++) {
+        for (int j = 0; j < (N/4)*4; j+=4) {
             double cij0 = C[i + j * lda];
             double cij1 = C[i+1 + j * lda];
             double cij2 = C[i+2 + j * lda];
