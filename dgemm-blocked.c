@@ -121,32 +121,48 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
     for (int i = 0; i < (M/4)*4; i += 4) {
-        for (int j = 0; j < (N/4)*4; j+=4) {
+//        for (int j = 0; j < (N/4)*4; j+=4) {
+//            double cij0 = C[i + j * lda];
+//            double cij1 = C[i+1 + j * lda];
+//            double cij2 = C[i+2 + j * lda];
+//            double cij3 = C[i+3 + j * lda];
+//            for (int k = 0; k < K; k++) {
+//                cij0 += A[i + k * lda] * B[k * lda + j];
+//                cij1 += A[i + 1 + k * lda] * B[k * lda + j];
+//                cij2 += A[i + 2 + k * lda] * B[k * lda + j];
+//                cij3 += A[i + 3 +k * lda] * B[k * lda + j];
+//
+//                cij0 += A[i + k * lda] * B[k * lda + j + 1];
+//                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 1];
+//                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 1];
+//                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 1];
+//
+//                cij0 += A[i + k * lda] * B[k * lda + j + 2];
+//                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 2];
+//                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 2];
+//                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 2];
+//
+//                cij0 += A[i + k * lda] * B[k * lda + j + 3];
+//                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 3];
+//                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 3];
+//                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 3];
+//
+//            }
+//            C[i + j * lda] = cij0;
+//            C[i + 1 + j * lda] = cij1;
+//            C[i + 2 + j * lda] = cij2;
+//            C[i + 3 + j * lda] = cij3;
+//        }
+        for (int j = 0; j < (N/4)*4; j++) {
             double cij0 = C[i + j * lda];
-            double cij1 = C[i+1 + j * lda];
-            double cij2 = C[i+2 + j * lda];
-            double cij3 = C[i+3 + j * lda];
+            double cij1 = C[i + 1 + j * lda];
+            double cij2 = C[i + 2 + j * lda];
+            double cij3 = C[i + 3 + j * lda];
             for (int k = 0; k < K; k++) {
                 cij0 += A[i + k * lda] * B[k * lda + j];
                 cij1 += A[i + 1 + k * lda] * B[k * lda + j];
                 cij2 += A[i + 2 + k * lda] * B[k * lda + j];
                 cij3 += A[i + 3 +k * lda] * B[k * lda + j];
-
-                cij0 += A[i + k * lda] * B[k * lda + j + 1];
-                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 1];
-                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 1];
-                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 1];
-
-                cij0 += A[i + k * lda] * B[k * lda + j + 2];
-                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 2];
-                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 2];
-                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 2];
-
-                cij0 += A[i + k * lda] * B[k * lda + j + 3];
-                cij1 += A[i + 1 + k * lda] * B[k * lda + j + 3];
-                cij2 += A[i + 2 + k * lda] * B[k * lda + j + 3];
-                cij3 += A[i + 3 +k * lda] * B[k * lda + j + 3];
-
             }
             C[i + j * lda] = cij0;
             C[i + 1 + j * lda] = cij1;
