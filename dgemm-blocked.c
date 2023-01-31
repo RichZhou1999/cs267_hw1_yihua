@@ -73,8 +73,8 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
-    for (int i = 0; i < (M/4)*8; i += 8){
-        for (int j = 0; j < (N/4)*8; j += 8){
+    for (int i = 0; i < (M/8)*8; i += 8){
+        for (int j = 0; j < (N/8)*8; j += 8){
             __m256d vc0 = _mm256_loadu_pd(&C[i + j * lda]);
             __m256d vc1 = _mm256_loadu_pd(&C[i + (j+1) * lda]);
             __m256d vc2 = _mm256_loadu_pd(&C[i + (j+2) * lda]);
@@ -112,7 +112,7 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
             _mm256_storeu_pd( &C[i + (j+7)*lda], vc7 );
         }
 
-        for (int j = (N/4)*8; j < N; j++) {
+        for (int j = (N/8)*8; j < N; j++) {
             double cij0 = C[i + j * lda];
             double cij1 = C[i + 1 + j * lda];
             double cij2 = C[i + 2 + j * lda];
