@@ -103,6 +103,7 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 __m256d vb5 = _mm256_broadcast_sd(&B[k * lda + j + 5]);
                 __m256d vb6 = _mm256_broadcast_sd(&B[k * lda + j + 6]);
                 __m256d vb7 = _mm256_broadcast_sd(&B[k * lda + j + 7]);
+
                 vc0 = _mm256_fmadd_pd(va, vb0, vc0);
                 vc1 = _mm256_fmadd_pd(va, vb1, vc1);
                 vc2 = _mm256_fmadd_pd(va, vb2, vc2);
@@ -112,14 +113,14 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 vc6 = _mm256_fmadd_pd(va, vb6, vc6);
                 vc7 = _mm256_fmadd_pd(va, vb7, vc7);
 
-                vc10 = _mm256_fmadd_pd(va2, vb0, vc0);
-                vc11 = _mm256_fmadd_pd(va2, vb1, vc1);
-                vc12 = _mm256_fmadd_pd(va2, vb2, vc2);
-                vc13 = _mm256_fmadd_pd(va2, vb3, vc3);
-                vc14 = _mm256_fmadd_pd(va2, vb4, vc4);
-                vc15 = _mm256_fmadd_pd(va2, vb5, vc5);
-                vc16 = _mm256_fmadd_pd(va2, vb6, vc6);
-                vc17 = _mm256_fmadd_pd(va2, vb7, vc7);
+                vc10 = _mm256_fmadd_pd(va2, vb0, vc10);
+                vc11 = _mm256_fmadd_pd(va2, vb1, vc11);
+                vc12 = _mm256_fmadd_pd(va2, vb2, vc12);
+                vc13 = _mm256_fmadd_pd(va2, vb3, vc13);
+                vc14 = _mm256_fmadd_pd(va2, vb4, vc14);
+                vc15 = _mm256_fmadd_pd(va2, vb5, vc15);
+                vc16 = _mm256_fmadd_pd(va2, vb6, vc16);
+                vc17 = _mm256_fmadd_pd(va2, vb7, vc17);
 
             }
             _mm256_storeu_pd( &C[i + j * lda], vc0 );
