@@ -149,8 +149,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
             double cij3 = C[i + 3 + j * lda];
             double cij4 = C[i + 4 + j * lda];
             double cij5 = C[i + 5 + j * lda];
-//            double cij6 = C[i + 6 + j * lda];
-//            double cij7 = C[i + 7 + j * lda];
+            double cij6 = C[i + 6 + j * lda];
+            double cij7 = C[i + 7 + j * lda];
             for (int k = 0; k < K; k++) {
                 cij0 += A[i + k * lda] * B[k * lda + j];
                 cij1 += A[i + 1 + k * lda] * B[k * lda + j];
@@ -158,8 +158,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
                 cij3 += A[i + 3 +k * lda] * B[k * lda + j];
                 cij4 += A[i + 4 + k * lda] * B[k * lda + j];
                 cij5 += A[i + 5 + k * lda] * B[k * lda + j];
-//                cij6 += A[i + 6 + k * lda] * B[k * lda + j];
-//                cij7 += A[i + 7 +k * lda] * B[k * lda + j];
+                cij6 += A[i + 6 + k * lda] * B[k * lda + j];
+                cij7 += A[i + 7 +k * lda] * B[k * lda + j];
             }
             C[i + j * lda] = cij0;
             C[i + 1 + j * lda] = cij1;
@@ -167,8 +167,8 @@ static void do_block(int lda, int M, int N, int K, double* A, double* B, double*
             C[i + 3 + j * lda] = cij3;
             C[i + 4 + j * lda] = cij4;
             C[i + 5 + j * lda] = cij5;
-//            C[i + 6 + j * lda] = cij6;
-//            C[i + 7 + j * lda] = cij7;
+            C[i + 6 + j * lda] = cij6;
+            C[i + 7 + j * lda] = cij7;
         }
 
     }
