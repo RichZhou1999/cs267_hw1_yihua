@@ -73,77 +73,105 @@ const char* dgemm_desc = "Simple blocked dgemm.";
 
 static void do_block(int lda, int M, int N, int K, double* A, double* B, double* C) {
     // For each row i of A
-    for (int i = 0; i < (M/4)*4; i += 4){
-        for (int j = 0; j < (N/4)*4; j += 4){
+    for (int i = 0; i < (M/8)*8; i += 8){
+        for (int j = 0; j < (N/8)*8; j += 8){
             __m256d vc0 = _mm256_loadu_pd(&C[i + j * lda]);
             __m256d vc1 = _mm256_loadu_pd(&C[i + (j+1) * lda]);
             __m256d vc2 = _mm256_loadu_pd(&C[i + (j+2) * lda]);
             __m256d vc3 = _mm256_loadu_pd(&C[i + (j+3) * lda]);
-//            __m256d vc4 = _mm256_loadu_pd(&C[i + (j+4) * lda]);
-//            __m256d vc5 = _mm256_loadu_pd(&C[i + (j+5) * lda]);
-//            __m256d vc6 = _mm256_loadu_pd(&C[i + (j+6) * lda]);
-//            __m256d vc7 = _mm256_loadu_pd(&C[i + (j+7) * lda]);
+            __m256d vc4 = _mm256_loadu_pd(&C[i + (j+4) * lda]);
+            __m256d vc5 = _mm256_loadu_pd(&C[i + (j+5) * lda]);
+            __m256d vc6 = _mm256_loadu_pd(&C[i + (j+6) * lda]);
+            __m256d vc7 = _mm256_loadu_pd(&C[i + (j+7) * lda]);
+
+            __m256d vc10 = _mm256_loadu_pd(&C[i + 4 + j * lda]);
+            __m256d vc11 = _mm256_loadu_pd(&C[i + 4+(j+1) * lda]);
+            __m256d vc12 = _mm256_loadu_pd(&C[i + 4+(j+2) * lda]);
+            __m256d vc13 = _mm256_loadu_pd(&C[i + 4+(j+3) * lda]);
+            __m256d vc14 = _mm256_loadu_pd(&C[i + 4+(j+4) * lda]);
+            __m256d vc15 = _mm256_loadu_pd(&C[i + 4+(j+5) * lda]);
+            __m256d vc16 = _mm256_loadu_pd(&C[i + 4+(j+6) * lda]);
+            __m256d vc17 = _mm256_loadu_pd(&C[i + 4+(j+7) * lda]);
             for (int k = 0; k < K; k++){
                 __m256d va = _mm256_loadu_pd(&A[i + k * lda]);
-//                __m256d va2 = _mm256_loadu_pd(&A[i + 4 + k * lda]);
+                __m256d va2 = _mm256_loadu_pd(&A[i + 4 + k * lda]);
                 __m256d vb0 = _mm256_broadcast_sd(&B[k * lda + j]);
                 __m256d vb1 = _mm256_broadcast_sd(&B[k * lda + j + 1]);
                 __m256d vb2 = _mm256_broadcast_sd(&B[k * lda + j + 2]);
                 __m256d vb3 = _mm256_broadcast_sd(&B[k * lda + j + 3]);
-//                __m256d vb4 = _mm256_broadcast_sd(&B[k * lda + j +4]);
-//                __m256d vb5 = _mm256_broadcast_sd(&B[k * lda + j + 5]);
-//                __m256d vb6 = _mm256_broadcast_sd(&B[k * lda + j + 6]);
-//                __m256d vb7 = _mm256_broadcast_sd(&B[k * lda + j + 7]);
+                __m256d vb4 = _mm256_broadcast_sd(&B[k * lda + j +4]);
+                __m256d vb5 = _mm256_broadcast_sd(&B[k * lda + j + 5]);
+                __m256d vb6 = _mm256_broadcast_sd(&B[k * lda + j + 6]);
+                __m256d vb7 = _mm256_broadcast_sd(&B[k * lda + j + 7]);
                 vc0 = _mm256_fmadd_pd(va, vb0, vc0);
                 vc1 = _mm256_fmadd_pd(va, vb1, vc1);
                 vc2 = _mm256_fmadd_pd(va, vb2, vc2);
                 vc3 = _mm256_fmadd_pd(va, vb3, vc3);
-//                vc4 = _mm256_fmadd_pd(va, vb4, vc4);
-//                vc5 = _mm256_fmadd_pd(va, vb5, vc5);
-//                vc6 = _mm256_fmadd_pd(va, vb6, vc6);
-//                vc7 = _mm256_fmadd_pd(va, vb7, vc7);
+                vc4 = _mm256_fmadd_pd(va, vb4, vc4);
+                vc5 = _mm256_fmadd_pd(va, vb5, vc5);
+                vc6 = _mm256_fmadd_pd(va, vb6, vc6);
+                vc7 = _mm256_fmadd_pd(va, vb7, vc7);
+
+                vc10 = _mm256_fmadd_pd(va2, vb0, vc0);
+                vc11 = _mm256_fmadd_pd(va2, vb1, vc1);
+                vc12 = _mm256_fmadd_pd(va2, vb2, vc2);
+                vc13 = _mm256_fmadd_pd(va2, vb3, vc3);
+                vc14 = _mm256_fmadd_pd(va2, vb4, vc4);
+                vc15 = _mm256_fmadd_pd(va2, vb5, vc5);
+                vc16 = _mm256_fmadd_pd(va2, vb6, vc6);
+                vc17 = _mm256_fmadd_pd(va2, vb7, vc7);
+
             }
             _mm256_storeu_pd( &C[i + j * lda], vc0 );
             _mm256_storeu_pd( &C[i + (j+1)*lda], vc1 );
             _mm256_storeu_pd( &C[i + (j+2)*lda], vc2 );
             _mm256_storeu_pd( &C[i + (j+3)*lda], vc3 );
-//            _mm256_storeu_pd( &C[i + (j+4) * lda], vc4 );
-//            _mm256_storeu_pd( &C[i + (j+5)*lda], vc5 );
-//            _mm256_storeu_pd( &C[i + (j+6)*lda], vc6 );
-//            _mm256_storeu_pd( &C[i + (j+7)*lda], vc7 );
+            _mm256_storeu_pd( &C[i + (j+4) * lda], vc4 );
+            _mm256_storeu_pd( &C[i + (j+5)*lda], vc5 );
+            _mm256_storeu_pd( &C[i + (j+6)*lda], vc6 );
+            _mm256_storeu_pd( &C[i + (j+7)*lda], vc7 );
+
+            _mm256_storeu_pd( &C[i + 4 + j * lda], vc10 );
+            _mm256_storeu_pd( &C[i + 4+ (j+1)*lda], vc11 );
+            _mm256_storeu_pd( &C[i + 4+(j+2)*lda], vc12 );
+            _mm256_storeu_pd( &C[i + 4+(j+3)*lda], vc13 );
+            _mm256_storeu_pd( &C[i + 4+(j+4) * lda], vc14 );
+            _mm256_storeu_pd( &C[i + 4+(j+5)*lda], vc15 );
+            _mm256_storeu_pd( &C[i + 4+(j+6)*lda], vc16 );
+            _mm256_storeu_pd( &C[i + 4+(j+7)*lda], vc17 );
         }
 
-        for (int j = (N/4)*4; j < N; j++) {
+        for (int j = (N/8)*8; j < N; j++) {
             double cij0 = C[i + j * lda];
             double cij1 = C[i + 1 + j * lda];
             double cij2 = C[i + 2 + j * lda];
             double cij3 = C[i + 3 + j * lda];
-//            double cij4 = C[i + 4 + j * lda];
-//            double cij5 = C[i + 5 + j * lda];
-//            double cij6 = C[i + 6 + j * lda];
-//            double cij7 = C[i + 7 + j * lda];
+            double cij4 = C[i + 4 + j * lda];
+            double cij5 = C[i + 5 + j * lda];
+            double cij6 = C[i + 6 + j * lda];
+            double cij7 = C[i + 7 + j * lda];
             for (int k = 0; k < K; k++) {
                 cij0 += A[i + k * lda] * B[k * lda + j];
                 cij1 += A[i + 1 + k * lda] * B[k * lda + j];
                 cij2 += A[i + 2 + k * lda] * B[k * lda + j];
                 cij3 += A[i + 3 +k * lda] * B[k * lda + j];
-//                cij4 += A[i + 4 + k * lda] * B[k * lda + j];
-//                cij5 += A[i + 5 + k * lda] * B[k * lda + j];
-//                cij6 += A[i + 6 + k * lda] * B[k * lda + j];
-//                cij7 += A[i + 7 +k * lda] * B[k * lda + j];
+                cij4 += A[i + 4 + k * lda] * B[k * lda + j];
+                cij5 += A[i + 5 + k * lda] * B[k * lda + j];
+                cij6 += A[i + 6 + k * lda] * B[k * lda + j];
+                cij7 += A[i + 7 +k * lda] * B[k * lda + j];
             }
             C[i + j * lda] = cij0;
             C[i + 1 + j * lda] = cij1;
             C[i + 2 + j * lda] = cij2;
             C[i + 3 + j * lda] = cij3;
-//            C[i + 4 + j * lda] = cij4;
-//            C[i + 5 + j * lda] = cij5;
-//            C[i + 6 + j * lda] = cij6;
-//            C[i + 7 + j * lda] = cij7;
+            C[i + 4 + j * lda] = cij4;
+            C[i + 5 + j * lda] = cij5;
+            C[i + 6 + j * lda] = cij6;
+            C[i + 7 + j * lda] = cij7;
         }
 
     }
-    for (int i = (M/4)*4; i < M; i++){
+    for (int i = (M/8)*8; i < M; i++){
         for (int j = 0; j < N; j++) {
             double cij = C[i + j * lda];
             for (int k = 0; k < K; k++) {
